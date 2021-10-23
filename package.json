@@ -1,0 +1,73 @@
+{
+  "name": "nh-gis",
+  "version": "0.0.0",
+  "description": "API for NH GIS data",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mflorence99/nh-gis.git"
+  },
+  "author": "Mark Florence",
+  "homepage": "https://github.com/mflorence99/nh-gis#readme",
+  "bugs": {
+    "url": "https://github.com/mflorence99/nh-gis/issues"
+  },
+  "main": "server.js",
+  "scripts": {
+    "clean:deps": "rm -rf node_modules && rm package-lock.json && npm install",
+    "counties": "ts-node --dir bin counties.ts",
+    "explorer": "ts-node --dir bin explorer.ts",
+    "indexer": "ts-node --dir bin indexer.ts",
+    "lakes": "ts-node --dir bin lakes.ts",
+    "lint": "eslint --fix 'bin/**/*.ts' 'src/**/*.ts' 'tests/**/*.ts'",
+    "parcels": "ts-node --dir bin parcels.ts",
+    "patcher": "ts-node --dir bin patcher.ts",
+    "places": "ts-node --dir bin places.ts",
+    "postinstall": "npm run patcher",
+    "powerlines": "ts-node --dir bin powerlines.ts",
+    "powerlines2": "ts-node --dir bin powerlines2.ts",
+    "prettier": "prettier --write .",
+    "railroads": "ts-node --dir bin railroads.ts",
+    "rivers": "ts-node --dir bin rivers.ts",
+    "roads": "ts-node --dir bin roads.ts",
+    "serve": "tsc -p ./src && node ./dist/server.js",
+    "test": "jest --runInBand --coverage --unhandled-rejections=none && ts-node --dir bin coverage-icon.ts",
+    "towns": "ts-node --dir bin towns.ts",
+    "washington-parcels": "ts-node --dir bin washington-parcels.ts"
+  },
+  "dependencies": {
+    "@turf/turf": "^6",
+    "chalk": "^4",
+    "fast-copy": "^2",
+    "jsome": "^2",
+    "object-hash": "^2",
+    "polylabel": "^1.1.0",
+    "serverx-ts": "0.0.39",
+    "shpjs": "4.0.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^27",
+    "@types/object-hash": "^2",
+    "@types/recursive-readdir": "^2",
+    "@types/shpjs": "3.4.1",
+    "@typescript-eslint/eslint-plugin": "^4",
+    "@typescript-eslint/parser": "^4",
+    "eslint": "^7",
+    "eslint-config-mflorence99": "^1",
+    "eslint-config-prettier": "^8",
+    "eslint-plugin-import": "^2",
+    "eslint-plugin-import-splitnsort": "^1",
+    "eslint-plugin-jest": "^24",
+    "eslint-plugin-prefer-arrow": "^1",
+    "jest": "^27",
+    "jest-extended": "^0.11.5",
+    "jest-junit": "^12",
+    "prettier": "^2",
+    "prettier-plugin-package": "^1",
+    "recursive-readdir": "^2",
+    "rimraf": "^3",
+    "ts-jest": "^27",
+    "ts-node": "^10",
+    "typescript": "^4"
+  }
+}
