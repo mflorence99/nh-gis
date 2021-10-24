@@ -86,7 +86,7 @@ console.log(
 const geojson: FeatureCollection = {
   crs: crs,
   features: allLots,
-  name: 'New Hampshire County Boundaries',
+  name: `${town} Lots`,
   type: 'FeatureCollection'
 };
 mkdirSync(`dist/${state}/${county}/${town}`, { recursive: true });

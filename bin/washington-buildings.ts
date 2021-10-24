@@ -1,0 +1,53 @@
+import { FeatureCollection } from './geojson';
+
+import { crs } from './geojson';
+
+import { mkdirSync } from 'fs';
+import { readFileSync } from 'fs';
+import { writeFileSync } from 'fs';
+
+import chalk from 'chalk';
+import toGeoJSON from '@mapbox/togeojson';
+import xmldom from 'xmldom';
+
+const gpx = new xmldom.DOMParser().parseFromString(
+  readFileSync('assets/washington-buildings.gpx', 'utf8')
+);
+
+// 👉 Washington is special as we have already curated the bildings
+
+const state = 'NEW HAMPSHIRE';
+const county = 'SULLIVAN';
+const town = 'WASHINGTON';
+
+const buildings = toGeoJSON.gpx(gpx);
+
+const geojson: FeatureCollection = {
+  crs: crs,
+  features: [],
+  name: `${town} Buildngs`,
+  type: 'FeatureCollection'
+};
+
+buildings.features.forEach((building) => {
+  // 👉 convert LineStrings into Polygons
+  if (building.geometry.type === 'LineString') {
+    building.geometry.type = 'Polygon';
+    const coords = building.geometry.coordinates;
+    const last = coords.length - 1;
+    if (coords[0][0] !== coords[last][0] || coords[0][1] !== coords[last][1])
+      coords.push(coords[0]);
+    building.geometry.coordinates = [coords];
+  }
+  geojson.features.push(building);
+});
+
+// 👉 one file for Washington
+console.log(
+  chalk.green(`... writing ${state}/${county}/${town}/buildings.geojson`)
+);
+mkdirSync(`dist/${state}/${county}/${town}`, { recursive: true });
+writeFileSync(
+  `dist/${state}/${county}/${town}/buildings.geojson`,
+  JSON.stringify(geojson, null, 2)
+);
