@@ -72,6 +72,24 @@ const state = 'NEW HAMPSHIRE';
 // 👇 no town can have more than this number of parcels
 const tooManyParcels = 5000;
 
+// 👇 we won't even bother to look at these towns as we know they're
+//    too big and analyzing them can cause out-of-memory conditions
+//    NOTE: we exclude WASHINGTON because we already have its legacy data
+// 👉 https://www.newhampshire-demographics.com/cities_by_population
+const exclusions = [
+  'CONCORD',
+  'DERRY',
+  'DOVER',
+  'HUDSON',
+  'LONDONDERRY',
+  'MANCHESTER',
+  'MERRIMACK',
+  'NASHUA',
+  'ROCHESTER',
+  'SALEM',
+  'WASHINGTON'
+];
+
 function calculateArea(feature: Feature): number {
   return turf.area(feature);
 }
@@ -215,7 +233,7 @@ async function main(): Promise<void> {
         const town = (feature.properties.TownName as string)?.toUpperCase();
 
         // 👉 we already have Washington via legacy data
-        if (town && town !== 'WASHINGTON') {
+        if (town && !exclusions.includes(town)) {
           // 👉 initialize all "by town" data structures
           countByTown[town] ??= 0;
           dupesByTown[town] ??= new Set<string>();
