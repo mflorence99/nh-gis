@@ -14,6 +14,7 @@
   },
   "main": "server.js",
   "scripts": {
+    "buildings": "ts-node --dir bin buildings.ts",
     "clean:deps": "rm -rf node_modules && rm package-lock.json && npm install",
     "counties": "ts-node --dir bin counties.ts",
     "explorer": "ts-node --dir bin explorer.ts",
@@ -39,14 +40,17 @@
   "dependencies": {
     "@mapbox/togeojson": "^0.16.0",
     "@turf/turf": "^6",
+    "@types/unzipper": "^0.10.4",
     "@types/xmldom": "^0.1.31",
     "chalk": "^4",
     "fast-copy": "^2",
     "jsome": "^2",
     "object-hash": "^2",
     "polylabel": "^1.1.0",
+    "request": "^2.88.2",
     "serverx-ts": "0.0.39",
     "shpjs": "4.0.2",
+    "unzipper": "^0.10.11",
     "xmldom": "^0.6.0"
   },
   "devDependencies": {
