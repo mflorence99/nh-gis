@@ -14,12 +14,19 @@ import chalk from 'chalk';
 const routes: Route[] = [
   {
     path: '/',
+    methods: ['GET'],
     handler: FileServer,
-    middlewares: [Compressor, CORS, RequestLogger],
+    middlewares: [Compressor, RequestLogger],
     services: [
       { provide: REQUEST_LOGGER_OPTS, useValue: { format: 'tiny' } },
       { provide: FILE_SERVER_OPTS, useValue: { root: __dirname } }
     ]
+  },
+  {
+    path: '/',
+    methods: ['OPTIONS'],
+    middlewares: [CORS, RequestLogger],
+    services: [{ provide: REQUEST_LOGGER_OPTS, useValue: { format: 'tiny' } }]
   }
 ];
 
