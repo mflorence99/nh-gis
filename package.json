@@ -32,6 +32,7 @@
     "rivers": "ts-node --dir bin rivers.ts",
     "roads": "ts-node --dir bin roads.ts",
     "serve": "tsc -p ./src && node ./dist/server.js",
+    "state": "ts-node --dir bin state.ts",
     "test": "jest --runInBand --coverage --unhandled-rejections=none && ts-node --dir bin coverage-icon.ts",
     "towns": "ts-node --dir bin towns.ts",
     "washington-buildings": "ts-node --dir bin washington-buildings.ts",

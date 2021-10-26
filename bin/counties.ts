@@ -29,6 +29,10 @@ counties.features.forEach((feature: Feature) => {
   feature.id = county;
   delete feature.properties;
 
+  feature.properties = {
+    name: county
+  };
+
   // 👉 ouch! the source data uses MultiPolygon, we need Polygon
   if (feature.geometry.type === 'MultiPolygon') {
     feature.geometry.type = 'Polygon';

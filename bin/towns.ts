@@ -37,6 +37,10 @@ towns.features.forEach((feature: Feature) => {
   feature.id = town;
   delete feature.properties;
 
+  feature.properties = {
+    name: town
+  };
+
   // 👉 gather all the towns in one file, then by county
   if (!townsByCounty[county]) townsByCounty[county] = [];
   townsByCounty[county].push(feature);
