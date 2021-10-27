@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "esModuleInterop": true,
+    "experimentalDecorators": true,
     "module": "commonjs",
     "outDir": "../dist",
     "skipLibCheck": true,
