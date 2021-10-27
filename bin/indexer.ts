@@ -114,6 +114,10 @@ towns.features.forEach((feature: Feature) => {
       roads: available({
         name: `${town} Roads`,
         url: `/${state}/${county}/${town}/roads.geojson`
+      }),
+      trails: available({
+        name: `${town} Trails`,
+        url: `/${state}/${county}/${town}/trails.geojson`
       })
     }
   };

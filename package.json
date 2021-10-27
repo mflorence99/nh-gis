@@ -35,6 +35,7 @@
     "state": "ts-node --dir bin state.ts",
     "test": "jest --runInBand --coverage --unhandled-rejections=none && ts-node --dir bin coverage-icon.ts",
     "towns": "ts-node --dir bin towns.ts",
+    "trails": "ts-node --dir bin trails.ts",
     "washington-buildings": "ts-node --dir bin washington-buildings.ts",
     "washington-parcels": "ts-node --dir bin washington-parcels.ts"
   },

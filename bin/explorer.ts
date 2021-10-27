@@ -5,7 +5,7 @@ import jsome from 'jsome';
 import shp from 'shpjs';
 
 const url =
-  'https://ftp.granit.sr.unh.edu/GRANIT_Data/Vector_Data/Utilities_and_Communication/d-pipelines/pipe';
+  'https://ftp.granit.sr.unh.edu/GRANIT_Data/Vector_Data/Transportation_Networks/d-trails/nhtrails';
 
 async function main(): Promise<void> {
   console.log(chalk.blue(`Loading ${url}...`));
