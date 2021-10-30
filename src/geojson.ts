@@ -10,7 +10,6 @@ import { tap } from 'rxjs/operators';
 
 import bboxPolygon from '@turf/bbox-polygon';
 import booleanIntersects from '@turf/boolean-intersects';
-import chalk from 'chalk';
 
 // 👇 filter over GeoJSON responses by bounding box
 
@@ -36,20 +35,20 @@ export class GeoJSONFilter extends Middleware {
             ) {
               const bbox = bboxPolygon([minX, minY, maxX, maxY]);
               const geojson = JSON.parse(response.body.toString());
-              const before = geojson.features.length;
-              const timeIn = Date.now();
+              // const before = geojson.features.length;
+              // const timeIn = Date.now();
               geojson.features = geojson.features.filter((feature) =>
                 booleanIntersects(feature, bbox)
               );
-              const after = geojson.features.length;
-              console.log(
-                'filter',
-                `${chalk.yellow(request.path)} trimmed from ${chalk.blue(
-                  before
-                )} features to ${chalk.blue(after)} in ${chalk.yellow(
-                  Date.now() - timeIn
-                )}ms`
-              );
+              // const after = geojson.features.length;
+              // console.log(
+              //   'filter',
+              //   `${chalk.yellow(request.path)} trimmed from ${chalk.blue(
+              //     before
+              //   )} features to ${chalk.blue(after)} in ${chalk.yellow(
+              //     Date.now() - timeIn
+              //   )}ms`
+              // );
               response.body = Buffer.from(JSON.stringify(geojson));
             }
           }),

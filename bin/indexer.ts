@@ -103,6 +103,10 @@ towns.features.forEach((feature: Feature) => {
         name: `${town} Powerlines`,
         url: `/${state}/${county}/${town}/powerlines.geojson`
       }),
+      searchables: available({
+        name: `${town} Searchables`,
+        url: `/${state}/${county}/${town}/searchables.geojson`
+      }),
       selectables: available({
         name: `${town} Parcels`,
         url: `/${state}/${county}/${town}/parcels.geojson`

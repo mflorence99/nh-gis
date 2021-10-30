@@ -27,6 +27,7 @@ export interface TownIndex {
     powerlines: Layer;
     rivers: Layer;
     roads: Layer;
+    searchables: Layer;
     selectables: Layer;
     trails: Layer;
   };

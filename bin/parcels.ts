@@ -338,6 +338,44 @@ async function main(): Promise<void> {
         writeFileSync(fn, JSON.stringify(parcelsByTown[town], null, 2));
       }
     });
+
+    // 👉 the idea behind searchables is to provide just enough data for
+    //    parcels to be searched -- we do this because we MUST have ALL
+    //    the data available
+
+    Object.keys(parcelsByTown).forEach((town) => {
+      const fn = `dist/${state}/${county}/${town}/searchables.geojson`;
+      if (countByTown[town] > tooManyParcels) {
+        console.log(
+          chalk.red(
+            `... ${state}/${county}/${town}/searchables.geojson has more than ${tooManyParcels} parcels`
+          )
+        );
+        stat(fn, (err, _stats) => {
+          if (!err) unlinkSync(fn);
+        });
+      } else {
+        console.log(
+          chalk.green(
+            `... writing ${state}/${county}/${town}/searchables.geojson`
+          )
+        );
+        mkdirSync(`dist/${state}/${county}/${town}`, { recursive: true });
+        // 👉 now do this again, converting the real parcels into searchables
+        parcelsByTown[town].features = parcelsByTown[town].features.map(
+          (feature: any): any => ({
+            bbox: feature.bbox,
+            properties: {
+              address: feature.properties.address,
+              id: feature.properties.id,
+              owner: feature.properties.owner
+            },
+            type: 'Feature'
+          })
+        );
+        writeFileSync(fn, JSON.stringify(parcelsByTown[town], null, 2));
+      }
+    });
   }
 }
 
