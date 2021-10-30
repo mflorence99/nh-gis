@@ -86,11 +86,35 @@ console.log(
 const geojson: FeatureCollection = {
   crs: crs,
   features: allLots,
-  name: `${town} Lots`,
+  name: `${town} Parcels`,
   type: 'FeatureCollection'
 };
 mkdirSync(`dist/${state}/${county}/${town}`, { recursive: true });
 writeFileSync(
   `dist/${state}/${county}/${town}/parcels.geojson`,
+  JSON.stringify(geojson, null, 2)
+);
+
+// 👉 the idea behind searchables is to provide just enough data for
+//    parcels to be searched -- we do this because we MUST have ALL
+//    the data available
+
+console.log(
+  chalk.green(`... writing ${state}/${county}/${town}/searchables.geojson`)
+);
+mkdirSync(`dist/${state}/${county}/${town}`, { recursive: true });
+// 👉 now do this again, converting the real parcels into searchables
+geojson.features = allLots.map((feature: any): any => ({
+  bbox: feature.bbox,
+  id: feature.id,
+  properties: {
+    address: feature.properties.address,
+    id: feature.properties.id,
+    owner: feature.properties.owner
+  },
+  type: 'Feature'
+}));
+writeFileSync(
+  `dist/${state}/${county}/${town}/searchables.geojson`,
   JSON.stringify(geojson, null, 2)
 );

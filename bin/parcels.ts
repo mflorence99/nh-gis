@@ -365,6 +365,7 @@ async function main(): Promise<void> {
         parcelsByTown[town].features = parcelsByTown[town].features.map(
           (feature: any): any => ({
             bbox: feature.bbox,
+            id: feature.id,
             properties: {
               address: feature.properties.address,
               id: feature.properties.id,

@@ -37,8 +37,7 @@
     "towns": "ts-node --dir bin towns.ts",
     "trails": "ts-node --dir bin trails.ts",
     "washington-buildings": "ts-node --dir bin washington-buildings.ts",
-    "washington-parcels": "ts-node --dir bin washington-parcels.ts",
-    "washington-searchables": "ts-node --dir bin washington-searchables.ts"
+    "washington-parcels": "ts-node --dir bin washington-parcels.ts"
   },
   "dependencies": {
     "@mapbox/togeojson": "^0.16.0",
