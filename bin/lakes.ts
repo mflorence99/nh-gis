@@ -12,6 +12,7 @@ import { writeFileSync } from 'fs';
 
 import chalk from 'chalk';
 import copy from 'fast-copy';
+import hash from 'object-hash';
 import shp from 'shpjs';
 
 const index = JSON.parse(readFileSync('./dist/index.json').toString());
@@ -46,6 +47,11 @@ async function main(): Promise<void> {
 
           // 👉 some features have bbox on the geometry, we created our own
           delete lake.geometry.bbox;
+
+          // 👉 AU_ID in the original dataset isn't unique
+          //    so let's at least use a hash of the geometry so that
+          //    every time we load the same ID is used
+          lake.id = hash.MD5(lake.geometry);
 
           lake.bbox = turf.bbox(lake);
           lake.properties = {

@@ -49,11 +49,12 @@
     "jsome": "^2",
     "node-fetch": "^2",
     "object-hash": "^2",
-    "polylabel": "^1.1.0",
+    "polylabel": "^1",
     "request": "^2",
     "serverx-ts": "0.0.39",
     "shpjs": "4",
     "unzipper": "^0.10.11",
+    "uuid": "^8",
     "xmldom": "^0.6.0"
   },
   "devDependencies": {

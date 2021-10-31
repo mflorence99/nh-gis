@@ -56,6 +56,10 @@ async function main(): Promise<void> {
           // 👉 some features have bbox on the geometry, we created our own
           delete river.geometry.bbox;
 
+          // 👉 every feature must have an ID
+          //    we aren't 1000% sure that GRANITID is unique
+          river.id = `${river.properties.GRANITID}-${river.properties.DR24K_ID}`;
+
           river.bbox = turf.bbox(river);
           river.properties = {
             county: county,

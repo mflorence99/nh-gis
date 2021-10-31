@@ -41,6 +41,10 @@ async function main(): Promise<void> {
         // 👉 some features have bbox on the geometry, we created our own
         delete feature.geometry.bbox;
 
+        // 👉 every feature must have an ID
+        //    we aren't 1000% sure that FeatID is unique
+        feature.id = `${feature.properties.FeatID}-${feature.properties.STCODE}-${feature.properties.COCODE}`;
+
         feature.bbox = turf.bbox(feature);
         feature.properties = {
           county: county,

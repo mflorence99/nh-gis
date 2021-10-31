@@ -29,6 +29,10 @@ railroads.features.forEach((feature: Feature) => {
   // 👉 some features have bbox on the geometry, we created our own
   delete feature.geometry.bbox;
 
+  // 👉 every feature must have an ID
+  //    we aren't 1000% sure that RR_UID is unique
+  feature.id = `${feature.properties.RRI_UID}-${feature.properties.RRI}`;
+
   feature.bbox = turf.bbox(feature);
   feature.properties = {
     name: feature.properties.NAME,

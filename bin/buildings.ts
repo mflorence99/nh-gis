@@ -12,6 +12,7 @@ import { writeFileSync } from 'fs';
 
 import chalk from 'chalk';
 import copy from 'fast-copy';
+import hash from 'object-hash';
 import request from 'request';
 import unzipper from 'unzipper';
 
@@ -114,6 +115,11 @@ async function main(): Promise<void> {
           const building = copy(feature);
           delete building.geometry.bbox;
           delete building.properties;
+
+          // 👉 the original dataset doesn't have an ID for buildings
+          //    so let's at least use a hash of the geometry so that
+          //    every time we load the same ID is used
+          building.id = hash.MD5(building.geometry);
 
           buildingsByCountyByTown[county] ??= {};
           const geojson: FeatureCollection = {

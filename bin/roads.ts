@@ -32,6 +32,10 @@ async function main(): Promise<void> {
       // 👉 some features have bbox on the geometry, we created our own
       delete feature.geometry.bbox;
 
+      // 👉 every feature must have an ID
+      //    let's hope that UNIQUE_ID is as unique as it claims to be!
+      feature.id = `${feature.properties.UNIQUE_ID}`;
+
       feature.bbox = turf.bbox(feature);
       feature.properties = {
         class: feature.properties.LEGIS_CLAS,

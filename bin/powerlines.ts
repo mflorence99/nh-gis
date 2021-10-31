@@ -61,6 +61,9 @@ powerlines.features.forEach((feature: Feature) => {
         // 👉 some features have bbox on the geometry, we created our own
         delete powerline.geometry.bbox;
 
+        // 👉 every feature must have an ID
+        powerline.id = powerline.properties.ID;
+
         powerline.bbox = turf.bbox(powerline);
         powerline.properties = {
           county: county,

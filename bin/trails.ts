@@ -13,6 +13,7 @@ import { writeFileSync } from 'fs';
 import booleanIntersects from '@turf/boolean-intersects';
 import chalk from 'chalk';
 import copy from 'fast-copy';
+import hash from 'object-hash';
 import shp from 'shpjs';
 
 const url =
@@ -81,6 +82,11 @@ async function main(): Promise<void> {
 
           // 👉 some features have bbox on the geometry, we created our own
           delete trail.geometry.bbox;
+
+          // 👉 Athe original dataset doesn't give a reliable unique ID
+          //    so let's at least use a hash of the geometry so that
+          //    every time we load the same ID is used
+          trail.id = hash.MD5(trail.geometry);
 
           trail.bbox = turf.bbox(trail);
           trail.properties = {
