@@ -21,18 +21,6 @@ const allLots: Feature[] = [];
 
 const fromLatLon = (l): [number, number] => (l ? [l.lon, l.lat] : null);
 
-const classByUsage = {
-  '110': 'Single family residence',
-  '120': 'Multi family residence',
-  '190': 'Current use',
-  '260': 'Commercial / Industrial',
-  '300': 'Town property',
-  '400': 'State property',
-  '500': 'State park',
-  '501': 'Towm forest',
-  '502': 'Conservation land'
-};
-
 PARCELS.lots.forEach((lot) => {
   console.log(chalk.blue(`Processing lot ${lot.id}...`));
   // 👉 break up multi-polygon lots into separate features
@@ -52,7 +40,6 @@ PARCELS.lots.forEach((lot) => {
         building$: lot.building$,
         callout: fromLatLon(lot.callouts[ix]),
         center: fromLatLon(lot.centers[ix]),
-        class: classByUsage[lot.usage],
         cu$: lot.cu$,
         elevation: lot.elevations[ix],
         id: lot.id,

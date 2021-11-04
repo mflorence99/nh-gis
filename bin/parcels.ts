@@ -276,7 +276,6 @@ async function main(): Promise<void> {
                   (feature.properties.Shape_Area ?? 0) /
                   43560 /* 👈 sq feet to acres */,
                 building$: feature.properties.TaxBldg,
-                class: feature.properties.SLUC_desc,
                 county: county,
                 cu$: feature.properties.TaxFeature,
                 id: id,
