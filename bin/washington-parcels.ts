@@ -23,47 +23,50 @@ const fromLatLon = (l): [number, number] => (l ? [l.lon, l.lat] : null);
 
 PARCELS.lots.forEach((lot) => {
   console.log(chalk.blue(`Processing lot ${lot.id}...`));
-  // 👉 break up multi-polygon lots into separate features
   const isMulti = lot.boundaries.length > 1;
-  for (let ix = 0; ix < lot.boundaries.length; ix++) {
-    const feature: Feature = {
-      geometry: {
-        coordinates: [lot.boundaries[ix].map(fromLatLon)],
-        type: 'Polygon'
-      },
-      id: isMulti ? `${lot.id}:${ix}` : lot.id,
-      properties: {
-        abutters: lot.abutters,
-        address: lot.address,
-        area: lot.area,
-        areaComputed: lot.areas[ix],
-        building$: lot.building$,
-        callout: fromLatLon(lot.callouts[ix]),
-        center: fromLatLon(lot.centers[ix]),
-        cu$: lot.cu$,
-        elevation: lot.elevations[ix],
-        id: lot.id,
-        label: lot.labels[ix],
-        land$: lot.land$,
-        lengths: lot.lengths[ix],
-        minWidth: lot.minWidths[ix],
-        neighborhood: lot.neighborhood,
-        numSplits: lot.boundaries.length,
-        orientation: lot.orientations[ix],
-        owner: lot.owner,
-        perimeter: lot.perimeters[ix],
-        sqarcity: lot.sqarcities[ix],
-        taxed$: lot.taxed$,
-        usage: lot.usage,
-        use: lot.use,
-        zone: lot.zone
-      },
-      type: 'Feature'
-    };
-    // 👉 we can get turf to do this once we've built the feature
-    feature.bbox = turf.bbox(feature);
-    allLots.push(feature);
-  }
+  const coordinates = isMulti
+    ? [
+        lot.boundaries.map((boundary) =>
+          boundary.map((point) => fromLatLon(point))
+        )
+      ]
+    : [lot.boundaries[0].map((point) => fromLatLon(point))];
+  const feature: Feature = {
+    geometry: {
+      coordinates: coordinates,
+      type: isMulti ? 'MultiPolygon' : 'Polygon'
+    },
+    id: lot.id,
+    properties: {
+      abutters: lot.abutters,
+      address: lot.address,
+      area: lot.area,
+      areas: lot.areas,
+      building$: lot.building$,
+      callouts: lot.callouts.map((callout) => fromLatLon(callout)),
+      centers: lot.centers.map((center) => fromLatLon(center)),
+      elevations: lot.elevations,
+      id: lot.id,
+      labels: lot.labels,
+      land$: lot.land$,
+      lengths: lot.lengths,
+      minWidths: lot.minWidths,
+      neighborhood: lot.neighborhood,
+      orientations: lot.orientations,
+      other$: lot.cu$,
+      owner: lot.owner,
+      perimeters: lot.perimeters,
+      sqarcities: lot.sqarcities,
+      taxed$: lot.taxed$,
+      usage: lot.usage,
+      use: lot.use,
+      zone: lot.zone
+    },
+    type: 'Feature'
+  };
+  // 👉 we can get turf to do this once we've built the feature
+  feature.bbox = turf.bbox(feature);
+  allLots.push(feature);
 });
 
 // 👉 one file for Washington

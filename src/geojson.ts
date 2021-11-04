@@ -33,22 +33,18 @@ export class GeoJSONFilter extends Middleware {
               maxX &&
               maxY
             ) {
-              const bbox = bboxPolygon([minX, minY, maxX, maxY]);
+              const qbbox = bboxPolygon([minX, minY, maxX, maxY]);
               const geojson = JSON.parse(response.body.toString());
               // const before = geojson.features.length;
               // const timeIn = Date.now();
-              geojson.features = geojson.features.filter((feature) =>
-                booleanIntersects(feature, bbox)
-              );
-              // const after = geojson.features.length;
-              // console.log(
-              //   'filter',
-              //   `${chalk.yellow(request.path)} trimmed from ${chalk.blue(
-              //     before
-              //   )} features to ${chalk.blue(after)} in ${chalk.yellow(
-              //     Date.now() - timeIn
-              //   )}ms`
-              // );
+              geojson.features = geojson.features.filter((feature) => {
+                try {
+                  const fbbox = bboxPolygon(feature.bbox);
+                  return booleanIntersects(qbbox, fbbox);
+                } catch (error) {
+                  return false;
+                }
+              });
               response.body = Buffer.from(JSON.stringify(geojson));
             }
           }),
