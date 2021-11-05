@@ -45,6 +45,7 @@ PARCELS.lots.forEach((lot) => {
       building$: lot.building$,
       callouts: lot.callouts.map((callout) => fromLatLon(callout)),
       centers: lot.centers.map((center) => fromLatLon(center)),
+      county: county,
       elevations: lot.elevations,
       id: lot.id,
       labels: lot.labels,
@@ -58,6 +59,7 @@ PARCELS.lots.forEach((lot) => {
       perimeters: lot.perimeters,
       sqarcities: lot.sqarcities,
       taxed$: lot.taxed$,
+      town: town,
       usage: lot.usage,
       use: lot.use,
       zone: lot.zone

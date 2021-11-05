@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { Feature } from './geojson';
 import { FeatureCollection } from './geojson';
+import { Features } from './common';
+import { Parcel } from './common';
 
+import { calculate } from './common';
 import { crs } from './geojson';
-
-import * as turf from '@turf/turf';
+import { normalize } from './common';
 
 import { mkdirSync } from 'fs';
 import { stat } from 'fs';
@@ -13,7 +15,6 @@ import { writeFileSync } from 'fs';
 
 import chalk from 'chalk';
 import hash from 'object-hash';
-import polylabel from 'polylabel';
 import shp from 'shpjs';
 
 const urlByCounty = {
@@ -90,131 +91,6 @@ const exclusions = [
   'WASHINGTON'
 ];
 
-function calculateArea(feature: Feature): number {
-  return turf.area(feature);
-}
-
-function calculateCenter(feature: Feature): number[] {
-  // 👉 we only want the polygon's outer ring
-  const points = feature.geometry.coordinates[0];
-  return polylabel([points]);
-}
-
-function calculateLengths(feature: Feature): number[] {
-  const lengths = [];
-  // 👉 we only want the polygon's outer ring
-  const points = feature.geometry.coordinates[0];
-  for (let ix = 1; ix < points.length; ix++) {
-    const lineString: GeoJSON.Feature = {
-      geometry: {
-        coordinates: [points[ix - 1], points[ix]],
-        type: 'LineString'
-      },
-      properties: {},
-      type: 'Feature'
-    };
-    lengths.push(turf.length(lineString) * 1000); /* 👈 meters */
-  }
-  return lengths;
-}
-
-function calculateMinWidth(feature: Feature, orientation: number): number {
-  const rotated = turf.transformRotate(feature, -orientation);
-  const [minX, minY, , maxY] = turf.bbox(rotated);
-  const from = turf.point([minX, minY]);
-  const to = turf.point([minX, maxY]);
-  return turf.distance(from, to) * 1000; /* 👈 meters */
-}
-
-function calculateOrientation(feature: Feature): number {
-  let angle = 0;
-  let longest = 0;
-  // 👉 we only want the polygon's outer ring
-  const points = feature.geometry.coordinates[0];
-  points.forEach((point, ix) => {
-    if (ix > 0) {
-      const p = turf.point(point);
-      const q = turf.point(points[ix - 1]);
-      const length = turf.distance(p, q);
-      if (length > longest) {
-        angle =
-          p.geometry.coordinates[0] < q.geometry.coordinates[0]
-            ? turf.bearing(p, q)
-            : turf.bearing(q, p);
-        longest = length;
-      }
-    }
-  });
-  // convert bearing to rotation
-  return angle - 90;
-}
-
-function calculatePerimeter(feature: Feature): number {
-  const lineString: GeoJSON.Feature = {
-    geometry: {
-      // 👉 we only want the polygon's outer ring
-      coordinates: feature.geometry.coordinates[0],
-      type: 'LineString'
-    },
-    properties: {},
-    type: 'Feature'
-  };
-  return turf.length(lineString) * 1000; /* 👈 meters */
-}
-
-function makeAddress(feature: Feature): string {
-  let address;
-  // 👉 sometimes number, street are conveniently separated
-  if (feature.properties.StreetNumb && feature.properties.StreetName) {
-    address =
-      `${feature.properties.StreetNumb} ${feature.properties.StreetName}`.trim();
-  }
-  // 👉 sometimes address is street, number
-  else if (feature.properties.StreetAddr) {
-    const parts = feature.properties.StreetAddr.split(',');
-    address =
-      parts.length > 1
-        ? `${parts[1].trim()} ${parts[0]}`
-        : feature.properties.StreetAddr;
-  }
-  // 👉 otherwise stret name is the best we have
-  else address = feature.properties.StreetName;
-  return address;
-}
-
-function makeID(feature: Feature): string {
-  const strip0 = (str: string): string => {
-    let stripped = str;
-    while (stripped.length && stripped[0] === '0') stripped = stripped.slice(1);
-    return stripped;
-  };
-  const parts = feature.properties.DisplayId.split('-')
-    .map((part) => strip0(part))
-    .filter((part) => part);
-  return parts.join('-');
-}
-
-function normalizeAddress(address: string): string {
-  let normalized = address.trim();
-  normalized = normalized.replace(/\bCIR\b/, ' CIRCLE ');
-  normalized = normalized.replace(/\bDR\b/, ' DRIVE ');
-  normalized = normalized.replace(/\bE\b/, ' EAST ');
-  normalized = normalized.replace(/\bHGTS\b/, ' HEIGHTS ');
-  normalized = normalized.replace(/\bLN\b/, ' LANE ');
-  normalized = normalized.replace(/\bMT\b/, ' MOUNTAIN ');
-  normalized = normalized.replace(/\bN\b/, ' NORTH ');
-  normalized = normalized.replace(/\bNO\b/, ' NORTH ');
-  normalized = normalized.replace(/\bPD\b/, ' POND ');
-  normalized = normalized.replace(/\bRD\b/, ' ROAD ');
-  normalized = normalized.replace(/\bS\b/, ' SOUTH ');
-  normalized = normalized.replace(/\bSO\b/, ' SOUTH ');
-  normalized = normalized.replace(/\bST\b/, ' STREET ');
-  normalized = normalized.replace(/\bTER\b/, ' TERRACE ');
-  normalized = normalized.replace(/\bTERR\b/, ' TERRACE ');
-  normalized = normalized.replace(/\bW\b/, ' WEST ');
-  return normalized.replace(/  +/g, ' ').trim();
-}
-
 async function main(): Promise<void> {
   const counties = Object.keys(urlByCounty);
   for (const county of counties) {
@@ -224,7 +100,7 @@ async function main(): Promise<void> {
 
     const countByTown: Record<string, number> = {};
     const dupesByTown: Record<string, Set<string>> = {};
-    const parcelsByTown: Record<string, FeatureCollection> = {};
+    const parcelsByTown: Record<string, Features> = {};
 
     parcels.features
       .filter((feature) => feature.properties.DisplayId)
@@ -242,7 +118,7 @@ async function main(): Promise<void> {
             features: [],
             name: `${town} Parcels`,
             type: 'FeatureCollection'
-          };
+          } as any;
 
           // 👉 occasionally, the data is dirty in that the same feature
           //    appears more than once, but not necessarily with the same ID,
@@ -251,69 +127,40 @@ async function main(): Promise<void> {
           if (dupesByTown[town].has(signature)) return;
           dupesByTown[town].add(signature);
 
-          // 👉 make all geometries look like MultiPolygons
-          const coordinates =
-            feature.geometry.type === 'Polygon'
-              ? [feature.geometry.coordinates]
-              : feature.geometry.coordinates;
+          // 👉 construct a parcel to represent this feature
+          const parcel: Parcel = {
+            geometry: feature.geometry,
+            id: makeID(feature),
+            owner: undefined,
+            path: undefined,
+            properties: {
+              address: makeAddress(feature),
+              area:
+                Math.round(
+                  ((feature.properties.Shape_Area ?? 0) / 43560) * 100
+                ) / 100 /* 👈 sq feet to acres to 2dps */,
+              building$: feature.properties.TaxBldg,
+              county: county,
+              id: makeID(feature),
+              land$: feature.properties.TaxLand,
+              other$: feature.properties.TaxFeature,
+              taxed$: feature.properties.TaxTotal,
+              town: town,
+              usage: usageByClass[feature.properties.SLUC_desc] ?? '190'
+            },
+            type: 'Feature'
+          };
 
-          // 👉 we'll split real MultiPolygons into multiple separate
-          //    parcels -- eg: one on either side of the road
-          const isMulti = feature.geometry.type === 'MultiPolygon';
-          for (let ix = 0; ix < coordinates.length; ix++) {
-            const id = makeID(feature);
+          // 👉 we've gone to great lengths to make a bridge to share this
+          //    code with MuniMap -- there' a better way but this will do
+          //    for now
 
-            // 👉 construct a parcel to represent this feature
-            const parcel: Feature = {
-              geometry: {
-                coordinates: coordinates[ix],
-                type: 'Polygon'
-              },
-              id: isMulti ? `${id}:${ix}` : id,
-              properties: {
-                address: normalizeAddress(makeAddress(feature)),
-                area:
-                  (feature.properties.Shape_Area ?? 0) /
-                  43560 /* 👈 sq feet to acres */,
-                building$: feature.properties.TaxBldg,
-                county: county,
-                cu$: feature.properties.TaxFeature,
-                id: id,
-                land$: feature.properties.TaxLand,
-                numSplits: coordinates.length,
-                taxed$: feature.properties.TaxTotal,
-                town: town,
-                usage: usageByClass[feature.properties.SLUC_desc] ?? '190'
-              },
-              type: 'Feature'
-            };
+          calculate(parcel);
+          normalize(parcel);
 
-            // 👉 we can get turf to do this once we've built the feature
-            parcel.bbox = turf.bbox(parcel);
-            const area = calculateArea(parcel);
-            const center = calculateCenter(parcel);
-            const lengths = calculateLengths(parcel);
-            const orientation = calculateOrientation(parcel);
-            const minWidth = calculateMinWidth(parcel, orientation);
-            const perimeter = calculatePerimeter(parcel);
-            const sqarcity = (area / Math.pow(perimeter, 2)) * 4 * Math.PI;
-
-            // 👉 update parcel with calculations
-            parcel.properties.areaComputed =
-              area * 0.000247105; /* 👈 to acres */
-            parcel.properties.center = center;
-            parcel.properties.lengths = lengths.map(
-              (length) => length * 3.28084
-            ); /* 👈 to feet */
-            parcel.properties.minWidth = minWidth * 3.28084; /* 👈 to feet */
-            parcel.properties.orientation = orientation;
-            parcel.properties.perimeter = perimeter * 3.28084; /* 👈 to feet */
-            parcel.properties.sqarcity = sqarcity;
-
-            // 👉 gather town's parcels together for later
-            countByTown[town] += 1;
-            parcelsByTown[town].features.push(parcel);
-          }
+          // 👉 gather town's parcels together for later
+          countByTown[town] += 1;
+          parcelsByTown[town].features.push(parcel as any);
         }
       });
 
@@ -380,6 +227,38 @@ async function main(): Promise<void> {
 }
 
 main();
+
+function makeAddress(feature: Feature): string {
+  let address;
+  // 👉 sometimes number, street are conveniently separated
+  if (feature.properties.StreetNumb && feature.properties.StreetName) {
+    address =
+      `${feature.properties.StreetNumb} ${feature.properties.StreetName}`.trim();
+  }
+  // 👉 sometimes address is street, number
+  else if (feature.properties.StreetAddr) {
+    const parts = feature.properties.StreetAddr.split(',');
+    address =
+      parts.length > 1
+        ? `${parts[1].trim()} ${parts[0]}`
+        : feature.properties.StreetAddr;
+  }
+  // 👉 otherwise stret name is the best we have
+  else address = feature.properties.StreetName;
+  return address;
+}
+
+function makeID(feature: Feature): string {
+  const strip0 = (str: string): string => {
+    let stripped = str;
+    while (stripped.length && stripped[0] === '0') stripped = stripped.slice(1);
+    return stripped;
+  };
+  const parts = feature.properties.DisplayId.split('-')
+    .map((part) => strip0(part))
+    .filter((part) => part);
+  return parts.join('-');
+}
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const sample = {
