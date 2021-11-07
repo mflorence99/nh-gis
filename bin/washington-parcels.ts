@@ -25,11 +25,9 @@ PARCELS.lots.forEach((lot) => {
   console.log(chalk.blue(`Processing lot ${lot.id}...`));
   const isMulti = lot.boundaries.length > 1;
   const coordinates = isMulti
-    ? [
-        lot.boundaries.map((boundary) =>
-          boundary.map((point) => fromLatLon(point))
-        )
-      ]
+    ? lot.boundaries.map((boundary) => [
+        boundary.map((point) => fromLatLon(point))
+      ])
     : [lot.boundaries[0].map((point) => fromLatLon(point))];
   const feature: Feature = {
     geometry: {

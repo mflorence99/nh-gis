@@ -73,6 +73,9 @@ const state = 'NEW HAMPSHIRE';
 // 👇 no town can have more than this number of parcels
 const tooManyParcels = 5000;
 
+// 👇 it looks like the geometry of some towns is wonky
+const tooManyZeroAreaParcelsRatio = 0.5;
+
 // 👇 we won't even bother to look at these towns as we know they're
 //    too big and analyzing them can cause out-of-memory conditions
 //    NOTE: we exclude WASHINGTON because we already have its legacy data
@@ -101,6 +104,7 @@ async function main(): Promise<void> {
     const countByTown: Record<string, number> = {};
     const dupesByTown: Record<string, Set<string>> = {};
     const parcelsByTown: Record<string, Features> = {};
+    const zeroAreaByTown: Record<string, number> = {};
 
     parcels.features
       .filter((feature) => feature.properties.DisplayId)
@@ -119,6 +123,7 @@ async function main(): Promise<void> {
             name: `${town} Parcels`,
             type: 'FeatureCollection'
           } as any;
+          zeroAreaByTown[town] ??= 0;
 
           // 👉 occasionally, the data is dirty in that the same feature
           //    appears more than once, but not necessarily with the same ID,
@@ -161,13 +166,28 @@ async function main(): Promise<void> {
           // 👉 gather town's parcels together for later
           countByTown[town] += 1;
           parcelsByTown[town].features.push(parcel as any);
+          if (parcel.properties.area === 0) zeroAreaByTown[town] += 1;
         }
       });
 
     // 👉 one file per town with <= "tooManyLots"
     Object.keys(parcelsByTown).forEach((town) => {
       const fn = `dist/${state}/${county}/${town}/parcels.geojson`;
-      if (countByTown[town] > tooManyParcels) {
+      if (
+        zeroAreaByTown[town] >
+        countByTown[town] * tooManyZeroAreaParcelsRatio
+      ) {
+        console.log(
+          chalk.magenta(
+            `... ${state}/${county}/${town}/parcels.geojson has more than ${
+              tooManyZeroAreaParcelsRatio * 100
+            }% zero-area parcels`
+          )
+        );
+        stat(fn, (err, _stats) => {
+          if (!err) unlinkSync(fn);
+        });
+      } else if (countByTown[town] > tooManyParcels) {
         console.log(
           chalk.red(
             `... ${state}/${county}/${town}/parcels.geojson has more than ${tooManyParcels} parcels`
@@ -191,12 +211,10 @@ async function main(): Promise<void> {
 
     Object.keys(parcelsByTown).forEach((town) => {
       const fn = `dist/${state}/${county}/${town}/searchables.geojson`;
-      if (countByTown[town] > tooManyParcels) {
-        console.log(
-          chalk.red(
-            `... ${state}/${county}/${town}/searchables.geojson has more than ${tooManyParcels} parcels`
-          )
-        );
+      if (
+        countByTown[town] > tooManyParcels ||
+        zeroAreaByTown[town] > countByTown[town] * tooManyZeroAreaParcelsRatio
+      ) {
         stat(fn, (err, _stats) => {
           if (!err) unlinkSync(fn);
         });
