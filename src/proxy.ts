@@ -20,7 +20,15 @@ export class ProxyServer extends Handler {
     return message$.pipe(
       mergeMap((message: Message): Observable<Message> => {
         const { request, response } = message;
-        const url = request.query.get('url');
+        let url = request.query.get('url');
+        const x = request.query.get('x');
+        const y = request.query.get('y');
+        const z = request.query.get('z');
+        if (x && y && z) {
+          url = url.replace(/\{x\}/, x);
+          url = url.replace(/\{y\}/, y);
+          url = url.replace(/\{z\}/, z);
+        }
         return of(message).pipe(
           mergeMap(() => from(fetch(url))),
           tap((resp) => {
