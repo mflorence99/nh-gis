@@ -35,12 +35,14 @@ export class GeoJSONFilter extends Middleware {
             ) {
               const qbbox = bboxPolygon([minX, minY, maxX, maxY]);
               const geojson = JSON.parse(response.body.toString());
-              // const before = geojson.features.length;
-              // const timeIn = Date.now();
               geojson.features = geojson.features.filter((feature) => {
                 try {
-                  const fbbox = bboxPolygon(feature.bbox);
-                  return booleanIntersects(qbbox, fbbox);
+                  // 👉 some features don't have a bbox, but we prefer
+                  // it if present as it is faster
+                  return booleanIntersects(
+                    qbbox,
+                    feature.bbox ? bboxPolygon(feature.bbox) : feature
+                  );
                 } catch (error) {
                   return false;
                 }
