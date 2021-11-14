@@ -51,7 +51,7 @@
     "object-hash": "^2",
     "polylabel": "^1",
     "request": "^2",
-    "serverx-ts": "0.0.39",
+    "serverx-ts": "0.0.41",
     "shpjs": "4",
     "unzipper": "^0.10.11",
     "uuid": "^8",
