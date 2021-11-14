@@ -87,6 +87,10 @@ towns.features.forEach((feature: Feature) => {
         name: `${town} Buildings`,
         url: `/${state}/${county}/${town}/buildings.geojson`
       }),
+      countables: available({
+        name: `${town} Countables`,
+        url: `/${state}/${county}/${town}/countables.geojson`
+      }),
       lakes: available({
         name: `${town} Lakes`,
         url: `/${state}/${county}/${town}/lakes.geojson`

@@ -93,6 +93,7 @@ console.log(
   chalk.green(`... writing ${state}/${county}/${town}/searchables.geojson`)
 );
 mkdirSync(`dist/${state}/${county}/${town}`, { recursive: true });
+
 // 👉 now do this again, converting the real parcels into searchables
 geojson.features = allLots.map((feature: any): any => ({
   bbox: feature.bbox,
@@ -106,5 +107,29 @@ geojson.features = allLots.map((feature: any): any => ({
 }));
 writeFileSync(
   `dist/${state}/${county}/${town}/searchables.geojson`,
+  JSON.stringify(geojson, null, 2)
+);
+
+// 👉 the idea behind countables is to provide just enough data for
+//    parcels to be aggregated -- we do this because we MUST have ALL
+//    the data available
+
+console.log(
+  chalk.green(`... writing ${state}/${county}/${town}/countables.geojson`)
+);
+mkdirSync(`dist/${state}/${county}/${town}`, { recursive: true });
+
+// 👉 now do this again, converting the real parcels into countables
+geojson.features = allLots.map((feature: any): any => ({
+  id: feature.id,
+  properties: {
+    area: feature.properties.area,
+    usage: feature.properties.usage,
+    use: feature.properties.use
+  },
+  type: 'Feature'
+}));
+writeFileSync(
+  `dist/${state}/${county}/${town}/countables.geojson`,
   JSON.stringify(geojson, null, 2)
 );

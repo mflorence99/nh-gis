@@ -134,6 +134,7 @@ async function main(): Promise<void> {
 
           // 👉 construct a parcel to represent this feature
           const parcel: Parcel = {
+            action: undefined,
             geometry: feature.geometry,
             id: makeID(feature),
             owner: undefined,
@@ -211,35 +212,51 @@ async function main(): Promise<void> {
 
     Object.keys(parcelsByTown).forEach((town) => {
       const fn = `dist/${state}/${county}/${town}/searchables.geojson`;
-      if (
-        countByTown[town] > tooManyParcels ||
-        zeroAreaByTown[town] > countByTown[town] * tooManyZeroAreaParcelsRatio
-      ) {
-        stat(fn, (err, _stats) => {
-          if (!err) unlinkSync(fn);
-        });
-      } else {
-        console.log(
-          chalk.green(
-            `... writing ${state}/${county}/${town}/searchables.geojson`
-          )
-        );
-        mkdirSync(`dist/${state}/${county}/${town}`, { recursive: true });
-        // 👉 now do this again, converting the real parcels into searchables
-        parcelsByTown[town].features = parcelsByTown[town].features.map(
-          (feature: any): any => ({
-            bbox: feature.bbox,
-            id: feature.id,
-            properties: {
-              address: feature.properties.address,
-              id: feature.properties.id,
-              owner: feature.properties.owner
-            },
-            type: 'Feature'
-          })
-        );
-        writeFileSync(fn, JSON.stringify(parcelsByTown[town], null, 2));
-      }
+      console.log(
+        chalk.green(
+          `... writing ${state}/${county}/${town}/searchables.geojson`
+        )
+      );
+      mkdirSync(`dist/${state}/${county}/${town}`, { recursive: true });
+      // 👉 now do this again, converting the real parcels into searchables
+      parcelsByTown[town].features = parcelsByTown[town].features.map(
+        (feature: any): any => ({
+          bbox: feature.bbox,
+          id: feature.id,
+          properties: {
+            address: feature.properties.address,
+            id: feature.properties.id,
+            owner: feature.properties.owner
+          },
+          type: 'Feature'
+        })
+      );
+      writeFileSync(fn, JSON.stringify(parcelsByTown[town], null, 2));
+    });
+
+    // 👉 the idea behind countables is to provide just enough data for
+    //    parcels to be searched -- we do this because we MUST have ALL
+    //    the data available
+
+    Object.keys(parcelsByTown).forEach((town) => {
+      const fn = `dist/${state}/${county}/${town}/countables.geojson`;
+      console.log(
+        chalk.green(`... writing ${state}/${county}/${town}/countables.geojson`)
+      );
+      mkdirSync(`dist/${state}/${county}/${town}`, { recursive: true });
+      // 👉 now do this again, converting the real parcels into countables
+      parcelsByTown[town].features = parcelsByTown[town].features.map(
+        (feature: any): any => ({
+          id: feature.id,
+          properties: {
+            area: feature.properties.area,
+            usage: feature.properties.usage,
+            use: feature.properties.use
+          },
+          type: 'Feature'
+        })
+      );
+      writeFileSync(fn, JSON.stringify(parcelsByTown[town], null, 2));
     });
   }
 }
