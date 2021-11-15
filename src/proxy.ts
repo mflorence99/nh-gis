@@ -14,6 +14,7 @@ import { tap } from 'rxjs';
 
 import fetch from 'node-fetch';
 import hash from 'object-hash';
+import md5File from 'md5-file';
 
 // 👇 a trivial proxy server so that we can use ArcGIS etc
 //    in prodfuction -- ie w/o the Webpack proxy
@@ -24,6 +25,9 @@ export class ProxyServer extends Handler {
     return message$.pipe(
       mergeMap((message: Message): Observable<Message> => {
         const { request, response } = message;
+
+        // 👉 Etag is the fie hash
+        const etag = request.headers['If-None-Match'];
 
         // 👉 proxied URL is in the query param
         let url = request.query.get('url');
@@ -38,19 +42,43 @@ export class ProxyServer extends Handler {
           url = url.replace(/\{z\}/, z);
         }
 
-        // 🔥 see if we've cached result
-        //    need to check if expire here
+        // 👉 see if we've stashed result
+        //    stash expires after 30 days
         const fpath = `/tmp/${hash.MD5(url)}.proxy`;
-        const isCached = fs.existsSync(fpath);
+        let stat;
+        try {
+          stat = fs.statSync(fpath);
+        } catch (error) {}
+        const maxAge = 30 * 24 * 60 * 60;
+        const isStashed = stat?.mtimeMs > Date.now() - maxAge * 1000;
 
         return of(message).pipe(
           mergeMap(() => {
             // 👉 read from file system if cached
-            if (isCached) {
-              return fromReadableStream(fs.createReadStream(fpath)).pipe(
-                tap((buffer: Buffer) => {
-                  response.body = buffer;
-                  response.statusCode = 200;
+            if (isStashed) {
+              return from(md5File(fpath)).pipe(
+                tap((hash: string) => {
+                  response.headers['Cache-Control'] = `max-age=${maxAge}`;
+                  response.headers['Etag'] = hash;
+                }),
+                mergeMap((hash: string) => {
+                  const cached = etag === hash;
+                  // cached pipe
+                  const cached$ = of(hash).pipe(
+                    tap(() => (response.statusCode = 304)),
+                    mapTo(message)
+                  );
+                  // not cached pipe
+                  const notCached$ = of(hash).pipe(
+                    mergeMap(() =>
+                      fromReadableStream(fs.createReadStream(fpath))
+                    ),
+                    tap((buffer: Buffer) => {
+                      response.body = buffer;
+                      response.statusCode = 200;
+                    })
+                  );
+                  return cached ? cached$ : notCached$;
                 })
               );
             }
